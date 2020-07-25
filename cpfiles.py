@@ -3,8 +3,15 @@ import shutil
 import sys
 
 m0list = {}
-
-m0list["tb"] = [
+m0list["rtl/inc"] = ["../verilog/cortex_m0_mcu_defs.v",
+                     "../../../logical/models/memories/ahb_memory_models_defs.v",
+                     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0_dap/verilog/cm0_dap_dp_sw_defs.v",
+                     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0_dap/verilog/cm0_dap_dp_jtag_defs.v",
+                     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0_dap/verilog/cm0_dap_ap_mast_defs.v",
+                     "../../../logical/apb_dualtimers/verilog/apb_dualtimers_defs.v",
+                     "../../../logical/apb_watchdog/verilog/apb_watchdog_defs.v"
+                     ]
+m0list["tb/debug_tester"] = [
     "../debug_tester/verilog/cortexm0_debug_tester.v",
     "../debug_tester/verilog/cortexm0_debug_tester_rom.v",
     "../debug_tester/verilog/cortexm0_debug_tester_ahb_sram_bridge.v",
@@ -14,14 +21,14 @@ m0list["tb"] = [
     "../debug_tester/verilog/cortexm0_debug_tester_io.v",
 ]
 
-m0list["tb2"] = [
+m0list["tb"] = [
     "../verilog/tb_clkreset.v",
     "../verilog/tb_uart_capture.v",
 ]
 
-m0list["rtl_top"] = ["../verilog/cortex_m0_mcu.v"]
+m0list["rtl/m0_mcu"] = ["../verilog/cortex_m0_mcu.v"]
 
-m0list["m0_top"] = [
+m0list["rtl/m0"] = [
     "../verilog/cortex_m0_mcu_clkctrl.v",
     "../verilog/cortex_m0_mcu_system.v",
     "../verilog/cortex_m0_mcu_pin_mux.v",
@@ -41,7 +48,7 @@ m0list["mem"] = [
     "../../../logical/models/memories//sram256x8.v",
 ]
 
-m0list["amba"] = [
+m0list["rtl/amba"] = [
     "../../../logical/apb_subsystem/verilog/apb_subsystem.v",
     "../../../logical/apb_subsystem/verilog/apb_test_slave.v",
     "../../../logical/apb_subsystem/verilog/irq_sync.v",
@@ -56,6 +63,9 @@ m0list["amba"] = [
     "../../../logical/ahb_to_extmem16/verilog/ahb_to_extmem16.v",
     "../../../logical/ahb_to_extmem16/verilog/ahb_to_extmem16_ahb_fsm.v",
     "../../../logical/ahb_to_extmem16/verilog/ahb_to_extmem16_mem_fsm.v",
+]
+# Peripherals.
+m0list["rtl/m0perip"] = [
     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0_integration/verilog/CORTEXM0INTEGRATION.v",
     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0_integration/verilog/cortexm0_pmu.v",
     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0_integration/verilog/cortexm0_wic.v",
@@ -74,7 +84,7 @@ m0list["amba"] = [
     "../../../logical/apb_slave_mux/verilog/apb_slave_mux.v",
 ]
 
-m0list["m0_rtl"] = [
+m0list["rtl/m0core"] = [
     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0/verilog/CORTEXM0.v",
     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0/verilog/cm0_top.v",
     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/cortexm0/verilog/cm0_top_sys.v",
@@ -121,6 +131,8 @@ m0list["m0_rtl"] = [
     "../../../cores/AT510-BU-50000-r0p0-02rel0/logical/models/cells/cm0_dap_cdc_comb_and_addr.v",
 ]
 
+Filelist = []
+
 for i in m0list.keys():
     if not os.path.exists(i):
         os.makedirs(i)
@@ -134,3 +146,27 @@ for i in m0list.keys():
             print("Unable to copy file. %s" % e)
         except:
             print("Unexpected error:", sys.exc_info())
+
+    for home, dirs, files in os.walk(i):
+        for filename in files:
+            # 文件名列表，包含完整路径
+            Filelist.append(os.path.join(home, filename))
+            # # 文件名列表，只包含文件名
+            # Filelist.append( filename)
+
+# reduce repeated items
+Filelist = list(set(Filelist))
+Filelist.sort()
+print(f"{Filelist}")
+
+with open('./rtllist.f', 'w') as f:
+    # f.write(f"{Filelist}\n")
+    for i in Filelist:
+        f.write(f"{i}\n")
+
+# +libext+.v+.vlib
+# +incdir+../verilog/
+with open('./rtlinc.f', 'w') as f:
+    f.write(f"+libext+.v+.vlib -sv\n")
+    for i in m0list.keys():
+        f.write(f"+incdir+{i}\n")
